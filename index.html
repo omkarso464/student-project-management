@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Project Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide-dev"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
+    <style>
+        /* A little custom CSS for the toast notifications and modal backdrop */
+        .toast {
+            transform: translateX(calc(100% + 2rem));
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div id="authScreen" class="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-blue-600 text-white text-4xl mb-6">
+                    🎓
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Student Projects</h1>
+                <p class="text-gray-500 mt-2 mb-8">Manage your academic projects seamlessly.</p>
+                
+                <div id="loginForm">
+                    <div class="mb-4 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                        <input type="email" id="loginEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your email">
+                    </div>
+                    <div class="mb-4 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input type="password" id="loginPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your password">
+                    </div>
+                    <div class="mb-6 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Role</label>
+                        <select id="loginRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="student_third">Third Year Student</option>
+                            <option value="student_fourth">Fourth Year Student</option>
+                            <option value="faculty">Faculty</option>
+                        </select>
+                    </div>
+                    <button class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition" onclick="login()">Sign In</button>
+                    <button class="w-full mt-2 bg-gray-200 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition" onclick="showRegister()">Create Account</button>
+                </div>
+
+                <div id="registerForm" class="hidden">
+                     <div class="mb-4 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
+                        <input type="text" id="registerName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your name">
+                    </div>
+                    <div class="mb-4 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                        <input type="email" id="registerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your email">
+                    </div>
+                    <div class="mb-4 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input type="password" id="registerPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Create a password">
+                    </div>
+                    <div class="mb-6 text-left">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Role</label>
+                        <select id="registerRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="student_third">Third Year Student</option>
+                            <option value="student_fourth">Fourth Year Student</option>
+                            <option value="faculty">Faculty</option>
+                        </select>
+                    </div>
+                    <button class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition" onclick="register()">Create Account</button>
+                    <button class="w-full mt-2 bg-gray-200 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition" onclick="showLogin()">Back to Login</button>
+                </div>
+                
+                <div class="mt-8 bg-gray-50 p-4 rounded-lg text-left">
+                    <p class="text-sm font-semibold text-gray-800 mb-3">Demo Credentials:</p>
+                    <div class="text-sm space-y-2">
+                        <div class="text-gray-600 cursor-pointer hover:text-blue-600" onclick="fillDemo('admin@college.edu', 'password123', 'faculty')">
+                            👨‍🏫 <span class="font-medium">Faculty:</span> admin@college.edu
+                        </div>
+                        <div class="text-gray-600 cursor-pointer hover:text-blue-600" onclick="fillDemo('john.smith@student.edu', 'password123', 'student_fourth')">
+                            🎓 <span class="font-medium">4th Year:</span> john.smith@student.edu
+                        </div>
+                         <div class="text-gray-600 cursor-pointer hover:text-blue-600" onclick="fillDemo('jane.doe@student.edu', 'password123', 'student_third')">
+                            📚 <span class="font-medium">3rd Year:</span> jane.doe@student.edu
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <nav class="bg-white shadow-md sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl">
+                            🎓
+                        </div>
+                        <div class="ml-4">
+                             <div class="text-xl font-bold text-gray-800">Project Management</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="text-right mr-4">
+                            <div class="text-sm font-medium text-gray-800" id="userName"></div>
+                            <div class="text-xs text-white bg-blue-500 px-2 py-0.5 rounded-full inline-block" id="userRole"></div>
+                        </div>
+                        <button onclick="logout()" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                             <i data-lucide="log-out" class="h-5 w-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-gray-900" id="pageTitle">Dashboard</h1>
+                <p class="mt-1 text-lg text-gray-600" id="pageSubtitle">Welcome to your project management system</p>
+            </div>
+
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" id="dashboardTab" onclick="showTab('dashboard')">Projects</button>
+                    <button class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 hidden" id="uploadTab" onclick="showTab('upload')">Upload Project</button>
+                    <button class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 hidden" id="analyticsTab" onclick="showTab('analytics')">Analytics</button>
+                </nav>
+            </div>
+
+            <div id="dashboardContent">
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 lg:col-span-2" id="searchInput" placeholder="Search projects by title, abstract, or tech..." onkeyup="filterProjects()">
+                        <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" id="domainFilter" onchange="filterProjects()">
+                            <option value="">All Domains</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Mobile Development">Mobile Development</option>
+                            <option value="Machine Learning">Machine Learning</option>
+                            <option value="Data Science">Data Science</option>
+                        </select>
+                         <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" id="yearFilter" onchange="filterProjects()">
+                            <option value="">All Years</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
+                        <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 hidden" id="statusFilter" onchange="filterProjects()">
+                            <option value="">All Status</option>
+                            <option value="approved">Approved</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projectsGrid">
+                    </div>
+            </div>
+
+            <div id="uploadContent" class="hidden">
+                 <div class="bg-white p-8 rounded-xl shadow-sm max-w-3xl mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Submit New Project</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Project Title</label>
+                            <input type="text" id="projectTitle" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., AI Stock Price Predictor">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Abstract</label>
+                            <textarea id="projectAbstract" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Describe your project in detail..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Domain</label>
+                                <select id="projectDomain" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Mobile Development">Mobile Development</option>
+                                    <option value="Machine Learning">Machine Learning</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Cybersecurity">Cybersecurity</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Year</label>
+                                <select id="projectYear" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Technologies (comma-separated)</label>
+                            <input type="text" id="projectTechnologies" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., React, Node.js, MongoDB">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Project Documents</label>
+                            <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                                <div class="space-y-1 text-center">
+                                    <i data-lucide="folder-up" class="mx-auto h-12 w-12 text-gray-400"></i>
+                                    <div class="flex text-sm text-gray-600">
+                                        <p class="pl-1">Click to upload files</p>
+                                        <input type="file" id="fileInput" multiple class="sr-only" onchange="handleFiles()">
+                                    </div>
+                                    <p class="text-xs text-gray-500">PDF, DOC, ZIP up to 10MB</p>
+                                </div>
+                            </div>
+                            <div id="fileList" class="mt-2 text-sm text-gray-600"></div>
+                        </div>
+                        <div class="text-right">
+                             <button class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="submitProject()">Submit Project</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="analyticsContent" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm text-center">
+                        <div class="text-5xl font-bold text-blue-600" id="totalProjects">0</div>
+                        <div class="mt-1 text-base text-gray-500">Total Projects</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm text-center">
+                        <div class="text-5xl font-bold text-green-500" id="approvedProjects">0</div>
+                        <div class="mt-1 text-base text-gray-500">Approved</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm text-center">
+                        <div class="text-5xl font-bold text-yellow-500" id="pendingProjects">0</div>
+                        <div class="mt-1 text-base text-gray-500">Pending</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm text-center">
+                        <div class="text-5xl font-bold text-red-500" id="rejectedProjects">0</div>
+                        <div class="mt-1 text-base text-gray-500">Rejected</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="projectModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 modal-backdrop transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                           <i data-lucide="file-text" class="h-6 w-6 text-blue-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-xl leading-6 font-bold text-gray-900" id="modalTitle">Project Title</h3>
+                            <div class="mt-4" id="modalContent">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CORE JAVASCRIPT LOGIC FROM INDEX.HTML (ADAPTED FOR NEW UI) ---
+
+        // Global variables
+        let currentUser = null;
+        let allProjects = [];
+        let filteredProjects = [];
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Sample data for demo
+        const sampleProjects = [
+            { id: 1, title: "E-Commerce Web Application", abstract: "A comprehensive e-commerce platform with user authentication, product catalog, shopping cart, and payment integration using modern web technologies.", domain: "Web Development", year: "2024", author: "John Smith", status: "approved", technologies: ["React", "Node.js", "MongoDB", "Stripe"], documentCount: 3, views: 128 },
+            { id: 2, title: "AI Stock Price Predictor", abstract: "Machine learning model that predicts stock prices using historical data, technical indicators, and sentiment analysis from financial news.", domain: "Machine Learning", year: "2024", author: "Jane Doe", status: "pending", technologies: ["Python", "TensorFlow", "Pandas", "Flask"], documentCount: 2, views: 45 },
+            { id: 3, title: "Mobile Food Delivery App", abstract: "Cross-platform mobile application for food ordering with real-time tracking, payment integration, and user-friendly interface.", domain: "Mobile Development", year: "2023", author: "Mike Johnson", status: "approved", technologies: ["React Native", "Firebase", "Google Maps"], documentCount: 4, views: 210 },
+            { id: 4, title: "Cybersecurity Threat Detector", abstract: "A system designed to detect and mitigate cybersecurity threats in real-time using network traffic analysis and anomaly detection algorithms.", domain: "Cybersecurity", year: "2023", author: "Alice Williams", status: "rejected", technologies: ["Python", "Scikit-learn", "Wireshark"], documentCount: 1, views: 78 }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            lucide.createIcons();
+        });
+
+        // Authentication functions
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+
+        function fillDemo(email, password, role) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            document.getElementById('loginRole').value = role;
+            showToast('Demo credentials filled! Click Sign In.', 'success');
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showToast('Please enter email and password.', 'error');
+                return;
+            }
+
+            if (email === 'admin@college.edu' && password === 'password123') {
+                currentUser = { name: 'Dr. Admin', role: 'faculty' };
+            } else if (email === 'john.smith@student.edu' && password === 'password123') {
+                currentUser = { name: 'John Smith', role: 'student_fourth' };
+            } else if (email === 'jane.doe@student.edu' && password === 'password123') {
+                currentUser = { name: 'Jane Doe', role: 'student_third' };
+            } else {
+                showToast('Invalid credentials. Please use demo accounts.', 'error');
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showDashboard();
+            showToast('Login successful!', 'success');
+        }
+        
+        async function register() {
+            showToast('Registration successful! (Demo mode)', 'success');
+            showLogin();
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            showToast('Logged out successfully.', 'success');
+        }
+
+        function checkAuthStatus() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
+            } else {
+                 document.getElementById('authScreen').classList.remove('hidden');
+            }
+        }
+
+        // Dashboard functions
+        function showDashboard() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = getRoleDisplay(currentUser.role);
+            
+            document.getElementById('uploadTab').classList.toggle('hidden', currentUser.role !== 'student_fourth');
+            document.getElementById('analyticsTab').classList.toggle('hidden', currentUser.role !== 'faculty');
+            document.getElementById('statusFilter').classList.toggle('hidden', currentUser.role !== 'faculty');
+
+            updatePageContent();
+            loadProjects();
+            showTab('dashboard'); // Default to projects tab
+        }
+
+        function getRoleDisplay(role) {
+            return {
+                'student_third': 'Third Year',
+                'student_fourth': 'Fourth Year',
+                'faculty': 'Faculty'
+            }[role] || role;
+        }
+
+        function updatePageContent() {
+            const titles = { 'student_third': 'Explore Projects', 'student_fourth': 'My Projects', 'faculty': 'All Projects' };
+            const subtitles = { 'student_third': 'Browse approved projects for inspiration', 'student_fourth': 'Manage your submitted projects', 'faculty': 'Review and manage all student projects' };
+            document.getElementById('pageTitle').textContent = titles[currentUser.role] || 'Dashboard';
+            document.getElementById('pageSubtitle').textContent = subtitles[currentUser.role] || 'Welcome';
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            ['dashboardContent', 'uploadContent', 'analyticsContent'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('border-blue-500', 'text-blue-600'));
+            
+            document.getElementById(tabName + 'Content').classList.remove('hidden');
+            document.getElementById(tabName + 'Tab').classList.add('border-blue-500', 'text-blue-600');
+            
+            if (tabName === 'analytics') loadAnalytics();
+        }
+        
+        // Status Colors Helper
+        function getStatusColor(status) {
+            return {
+                'approved': 'bg-green-100 text-green-800',
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'rejected': 'bg-red-100 text-red-800'
+            }[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Project management
+        function loadProjects() {
+            allProjects = filterProjectsByRole(sampleProjects);
+            filteredProjects = [...allProjects];
+            renderProjects();
+        }
+
+        function filterProjectsByRole(projects) {
+            if (currentUser.role === 'student_third') return projects.filter(p => p.status === 'approved');
+            if (currentUser.role === 'student_fourth') return projects.filter(p => p.author === currentUser.name);
+            return projects; // Faculty sees all
+        }
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            if (filteredProjects.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 bg-white rounded-lg shadow-sm">
+                    <i data-lucide="folder-search" class="h-16 w-16 mx-auto text-gray-400"></i>
+                    <h3 class="mt-2 text-lg font-medium text-gray-900">No projects found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Try adjusting your filters.</p>
+                </div>`;
+            } else {
+                grid.innerHTML = filteredProjects.map(project => `
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
+                        <div class="p-6 flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-gray-900 line-clamp-2 pr-2">${project.title}</h3>
+                                <span class="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}">
+                                    ${project.status}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 line-clamp-3 mb-4">${project.abstract}</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${(project.technologies || []).slice(0, 3).map(tech => `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">${tech.trim()}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="px-6 pb-6">
+                             <div class="flex items-center justify-between text-sm text-gray-500 mb-4 border-t pt-4">
+                                <div class="flex items-center">
+                                    <i data-lucide="user" class="h-4 w-4 mr-1.5"></i>
+                                    <span>${project.author}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i data-lucide="eye" class="h-4 w-4 mr-1.5"></i>
+                                    <span>${project.views || 0} views</span>
+                                </div>
+                            </div>
+                             <button onclick="viewProject(${project.id})" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                View Details <i data-lucide="arrow-right" class="h-4 w-4 ml-2"></i>
+                            </button>
+                             ${currentUser.role === 'faculty' && project.status === 'pending' ? `
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="updateProjectStatus(${project.id}, 'approved')" class="w-full text-sm text-green-700 bg-green-50 hover:bg-green-100 rounded-md py-2">Approve</button>
+                                    <button onclick="updateProjectStatus(${project.id}, 'rejected')" class="w-full text-sm text-red-700 bg-red-50 hover:bg-red-100 rounded-md py-2">Reject</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function updateProjectStatus(projectId, status) {
+            const project = allProjects.find(p => p.id === projectId) || sampleProjects.find(p => p.id === projectId);
+            if (project) {
+                project.status = status;
+                filterProjects(); // Re-filter and render
+                showToast(`Project status updated to ${status}.`, 'success');
+            }
+        }
+
+        function viewProject(projectId) {
+            const project = allProjects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            project.views = (project.views || 0) + 1; // Increment views
+            
+            document.getElementById('modalTitle').textContent = project.title;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-3">Project Information</h4>
+                        <dl class="space-y-3">
+                            <div><dt class="text-sm font-medium text-gray-500">Domain</dt><dd class="text-sm text-gray-900">${project.domain}</dd></div>
+                            <div><dt class="text-sm font-medium text-gray-500">Year</dt><dd class="text-sm text-gray-900">${project.year}</dd></div>
+                            <div><dt class="text-sm font-medium text-gray-500">Author</dt><dd class="text-sm text-gray-900">${project.author}</dd></div>
+                             <div><dt class="text-sm font-medium text-gray-500">Status</dt><dd><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}">${project.status}</span></dd></div>
+                        </dl>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-3">Technical Details</h4>
+                        <dl class="space-y-3">
+                            <div><dt class="text-sm font-medium text-gray-500">Technologies</dt><dd class="text-sm text-gray-900">${(project.technologies || []).join(', ')}</dd></div>
+                            <div><dt class="text-sm font-medium text-gray-500">Documents</dt><dd class="text-sm text-gray-900">${project.documentCount || 0}</dd></div>
+                            <div><dt class="text-sm font-medium text-gray-500">Views</dt><dd class="text-sm text-gray-900">${project.views}</dd></div>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-6"><h4 class="font-medium text-gray-800 mb-2">Abstract</h4><p class="text-sm text-gray-600 leading-relaxed">${project.abstract}</p></div>
+            `;
+            document.getElementById('projectModal').classList.remove('hidden');
+            lucide.createIcons(); // Render icons in the modal
+            renderProjects(); // Re-render to show updated view count
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+        }
+
+        // Search and filter
+        function filterProjects() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const domainFilter = document.getElementById('domainFilter').value;
+            const yearFilter = document.getElementById('yearFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            filteredProjects = allProjects.filter(project => {
+                const matchesSearch = !searchTerm || project.title.toLowerCase().includes(searchTerm) || project.abstract.toLowerCase().includes(searchTerm) || (project.technologies && project.technologies.some(tech => tech.toLowerCase().includes(searchTerm)));
+                const matchesDomain = !domainFilter || project.domain === domainFilter;
+                const matchesYear = !yearFilter || project.year === yearFilter;
+                const matchesStatus = currentUser.role !== 'faculty' || !statusFilter || project.status === statusFilter;
+                return matchesSearch && matchesDomain && matchesYear && matchesStatus;
+            });
+            renderProjects();
+        }
+
+        // Project submission
+        function handleFiles() {
+            const files = document.getElementById('fileInput').files;
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = files.length > 0 ? `${files.length} file(s) selected.` : '';
+        }
+
+        function submitProject() {
+            const newProject = {
+                id: Date.now(),
+                title: document.getElementById('projectTitle').value,
+                abstract: document.getElementById('projectAbstract').value,
+                domain: document.getElementById('projectDomain').value,
+                year: document.getElementById('projectYear').value,
+                author: currentUser.name,
+                status: 'pending',
+                technologies: document.getElementById('projectTechnologies').value.split(',').map(t => t.trim()).filter(t => t),
+                documentCount: document.getElementById('fileInput').files.length,
+                views: 0
+            };
+            
+            if (!newProject.title || !newProject.abstract) {
+                showToast('Please fill in title and abstract.', 'error');
+                return;
+            }
+            
+            sampleProjects.push(newProject);
+            showToast('Project submitted for review! (Demo mode)', 'success');
+            clearUploadForm();
+            showTab('dashboard');
+            loadProjects();
+        }
+
+        function clearUploadForm() {
+            document.getElementById('projectTitle').value = '';
+            document.getElementById('projectAbstract').value = '';
+            document.getElementById('projectTechnologies').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileList').innerHTML = '';
+        }
+
+        // Analytics
+        function loadAnalytics() {
+            const projects = sampleProjects; // Use full dataset for analytics
+            document.getElementById('totalProjects').textContent = projects.length;
+            document.getElementById('approvedProjects').textContent = projects.filter(p => p.status === 'approved').length;
+            document.getElementById('pendingProjects').textContent = projects.filter(p => p.status === 'pending').length;
+            document.getElementById('rejectedProjects').textContent = projects.filter(p => p.status === 'rejected').length;
+        }
+
+        // Utility: Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500' };
+            toast.className = `toast fixed top-5 right-5 p-4 rounded-lg text-white shadow-lg ${colors[type]}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
