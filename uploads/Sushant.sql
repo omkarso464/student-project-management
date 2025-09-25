@@ -22,7 +22,7 @@ UPDATE Proj_info
 SET domain = 'AI and IoT'
 WHERE project_ID = 'PJT2025_001';
 DELETE FROM Proj_info WHERE project_ID = 'PJT2025_010';
-
+SELECT title, upload_date FROM Proj_info WHERE upload_date BETWEEN '2025-08-01' AND '2025-08-05';
 
 
 
